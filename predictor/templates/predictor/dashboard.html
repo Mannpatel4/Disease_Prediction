@@ -1,0 +1,297 @@
+{% extends "predictor/base.html" %}
+{% block title %}Dashboard — MedPredict AI{% endblock %}
+
+{% block extra_styles %}
+<style>
+.page-header{margin-bottom:2rem}
+.page-header h1{font-family:var(--mono);font-size:1.75rem;font-weight:700;letter-spacing:-1px;margin-bottom:.4rem}
+.page-header p{color:var(--muted);font-size:.9rem}
+
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+@media(max-width:768px){.stats-row{grid-template-columns:repeat(2,1fr)}}
+
+.stat-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:1.25rem;position:relative;overflow:hidden;
+}
+.stat-card::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+}
+.stat-card.c1::after{background:var(--accent)}
+.stat-card.c2::after{background:var(--accent2)}
+.stat-card.c3::after{background:var(--warn)}
+.stat-card.c4::after{background:var(--danger)}
+
+.stat-val{font-family:var(--mono);font-size:2rem;font-weight:700;color:var(--text);line-height:1}
+.stat-lbl{font-size:.775rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:.4rem}
+.stat-icon{position:absolute;right:1.25rem;top:1.25rem;font-size:1.5rem;opacity:.4}
+
+/* Charts grid */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem}
+@media(max-width:768px){.charts-grid{grid-template-columns:1fr}}
+
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.chart-card.full-width{grid-column:1/-1}
+.chart-header{padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.chart-header h3{font-family:var(--mono);font-size:.875rem;color:var(--accent)}
+.chart-body{padding:1rem}
+.chart-body img{width:100%;border-radius:6px;display:block}
+.chart-placeholder{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:3rem;color:var(--muted);font-size:.85rem;text-align:center;gap:.5rem
+}
+
+/* Model accuracy cards */
+.model-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem}
+@media(max-width:768px){.model-cards{grid-template-columns:1fr}}
+
+.model-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:1.25rem;text-align:center;
+}
+.model-card:first-child{border-color:rgba(6,182,212,.4);box-shadow:0 0 20px rgba(6,182,212,.06)}
+.model-icon{font-size:1.75rem;margin-bottom:.5rem}
+.model-name-display{font-family:var(--mono);font-size:.875rem;color:var(--text);margin-bottom:.75rem}
+.accuracy-ring{
+  width:80px;height:80px;margin:0 auto .75rem;position:relative;
+}
+.accuracy-ring svg{transform:rotate(-90deg)}
+.accuracy-ring .ring-bg{fill:none;stroke:var(--border);stroke-width:6}
+.accuracy-ring .ring-fill{fill:none;stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .8s ease}
+.ring-text{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:.875rem;font-weight:700;color:var(--text);
+}
+.cv-label{font-size:.775rem;color:var(--muted)}
+
+/* Top diseases */
+.disease-bar-item{display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem}
+.disease-bar-name{font-size:.825rem;color:var(--text);min-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.disease-bar-track{flex:1;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.disease-bar-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .6s ease}
+.disease-bar-count{font-family:var(--mono);font-size:.775rem;color:var(--muted);min-width:30px;text-align:right}
+
+/* Recent table */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{text-align:left;padding:.6rem 1rem;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border)}
+td{padding:.7rem 1rem;border-bottom:1px solid var(--border);color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.02)}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1>📊 Analytics Dashboard</h1>
+  <p>ML model performance, dataset insights, and prediction history</p>
+</div>
+
+<!-- Stats row -->
+<div class="stats-row">
+  <div class="stat-card c1">
+    <span class="stat-icon">🧬</span>
+    <div class="stat-val">41</div>
+    <div class="stat-lbl">Disease Classes</div>
+  </div>
+  <div class="stat-card c2">
+    <span class="stat-icon">🩺</span>
+    <div class="stat-val">132</div>
+    <div class="stat-lbl">Symptoms</div>
+  </div>
+  <div class="stat-card c3">
+    <span class="stat-icon">📋</span>
+    <div class="stat-val">4920</div>
+    <div class="stat-lbl">Training Samples</div>
+  </div>
+  <div class="stat-card c4">
+    <span class="stat-icon">🔮</span>
+    <div class="stat-val">{{ total_predictions }}</div>
+    <div class="stat-lbl">Total Predictions</div>
+  </div>
+</div>
+
+<!-- Model accuracy rings -->
+<div style="margin-bottom:.75rem">
+  <h2 style="font-family:var(--mono);font-size:.9rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em">Model Performance</h2>
+</div>
+<div class="model-cards">
+  {% for name, stats in accuracy.items %}
+  {% with acc_pct=stats.accuracy|floatformat:1 cv_pct=stats.cv_mean|floatformat:1 %}
+  <div class="model-card">
+    <div class="model-icon">{% if forloop.counter == 1 %}🧠{% elif forloop.counter == 2 %}🌳{% else %}🌲{% endif %}</div>
+    <div class="model-name-display">{{ name }}</div>
+    <div class="accuracy-ring" id="ring-{{ forloop.counter }}">
+      <svg viewBox="0 0 80 80" width="80" height="80">
+        <circle class="ring-bg" cx="40" cy="40" r="34"/>
+        <circle class="ring-fill" cx="40" cy="40" r="34"
+          style="stroke:{% if forloop.counter == 1 %}#06b6d4{% elif forloop.counter == 2 %}#10b981{% else %}#f59e0b{% endif %};
+                 stroke-dasharray:213.6;stroke-dashoffset:{{ stats.accuracy|floatformat:4 }}"/>
+      </svg>
+      <div class="ring-text">{{ acc_pct }}%</div>
+    </div>
+    <div class="badge {% if forloop.counter == 1 %}badge-cyan{% elif forloop.counter == 2 %}badge-green{% else %}badge-warn{% endif %}">
+      Test Accuracy
+    </div>
+    <div class="cv-label" style="margin-top:.5rem">CV: {{ cv_pct }}%</div>
+  </div>
+  {% endwith %}
+  {% endfor %}
+</div>
+
+<!-- Charts -->
+<div class="charts-grid">
+
+  <!-- Model comparison chart -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>Model Accuracy Comparison</h3>
+      <span class="badge badge-cyan">Bar Chart</span>
+    </div>
+    <div class="chart-body">
+      {% if charts_exist.model_comparison %}
+      <img src="{{ MEDIA_URL }}{{ chart_files.model_comparison }}" alt="Model Comparison">
+      {% else %}
+      <div class="chart-placeholder">
+        <span style="font-size:2rem">📊</span>
+        <p>Chart not generated yet.<br>Run: <code style="color:var(--accent)">python manage.py train_models</code></p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Performance metrics -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>F1 / Precision / Recall</h3>
+      <span class="badge badge-green">Line Chart</span>
+    </div>
+    <div class="chart-body">
+      {% if charts_exist.performance_metrics %}
+      <img src="{{ MEDIA_URL }}{{ chart_files.performance_metrics }}" alt="Performance Metrics">
+      {% else %}
+      <div class="chart-placeholder"><span>📈</span><p>Run train_models to generate</p></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Disease distribution -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>Disease Distribution (Training Data)</h3>
+      <span class="badge badge-warn">Bar Chart</span>
+    </div>
+    <div class="chart-body">
+      {% if charts_exist.disease_distribution %}
+      <img src="{{ MEDIA_URL }}{{ chart_files.disease_distribution }}" alt="Disease Distribution">
+      {% else %}
+      <div class="chart-placeholder"><span>🦠</span><p>Run train_models to generate</p></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Top predicted diseases from DB -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <h3>Top Predicted Diseases</h3>
+      <span class="badge badge-cyan">Live Stats</span>
+    </div>
+    <div class="chart-body">
+      {% if top_diseases %}
+        {% with max_count=top_diseases.0.1 %}
+        {% for disease, count in top_diseases %}
+        <div class="disease-bar-item">
+          <div class="disease-bar-name">{{ disease }}</div>
+          <div class="disease-bar-track">
+            <div class="disease-bar-fill" style="width:{% widthratio count max_count 100 %}%"></div>
+          </div>
+          <div class="disease-bar-count">{{ count }}</div>
+        </div>
+        {% endfor %}
+        {% endwith %}
+      {% else %}
+      <div class="chart-placeholder">
+        <span>🔮</span>
+        <p>No predictions yet.<br><a href="{% url 'index' %}" style="color:var(--accent)">Make your first prediction →</a></p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Confusion matrix - full width -->
+  <div class="chart-card full-width">
+    <div class="chart-header">
+      <h3>Random Forest — Confusion Matrix (41 Disease Classes)</h3>
+      <span class="badge badge-green">Heatmap</span>
+    </div>
+    <div class="chart-body">
+      {% if charts_exist.confusion_matrix %}
+      <img src="{{ MEDIA_URL }}{{ chart_files.confusion_matrix }}" alt="Confusion Matrix">
+      {% else %}
+      <div class="chart-placeholder"><span>🔲</span><p>Run train_models to generate</p></div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<!-- Recent predictions table -->
+{% if recent %}
+<div class="chart-card">
+  <div class="chart-header">
+    <h3>Recent Predictions</h3>
+    <a href="{% url 'index' %}" class="badge badge-cyan" style="text-decoration:none">+ New Prediction</a>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Disease</th>
+          <th>Confidence</th>
+          <th>Model</th>
+          <th>User</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in recent %}
+        <tr>
+          <td><strong>{{ p.top_disease }}</strong></td>
+          <td>
+            <span class="badge {% if p.top_confidence >= 80 %}badge-green{% elif p.top_confidence >= 50 %}badge-warn{% else %}badge-red{% endif %}">
+              {{ p.top_confidence|floatformat:1 }}%
+            </span>
+          </td>
+          <td><span style="font-family:var(--mono);font-size:.8rem;color:var(--muted)">{{ p.model_used }}</span></td>
+          <td>{{ p.user.username|default:"Guest" }}</td>
+          <td style="color:var(--muted);font-size:.8rem">{{ p.created_at|date:"d M Y, H:i" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Animate accuracy rings on load
+document.addEventListener('DOMContentLoaded', () => {
+  const circumference = 213.6;
+  document.querySelectorAll('.ring-fill').forEach(ring => {
+    const offset = parseFloat(ring.style.strokeDashoffset);
+    // offset is passed as accuracy value (0-1), convert to dashoffset
+    const dashOffset = circumference - (offset * circumference);
+    ring.style.strokeDashoffset = circumference;
+    setTimeout(() => {
+      ring.style.transition = 'stroke-dashoffset 1s ease';
+      ring.style.strokeDashoffset = dashOffset;
+    }, 200);
+  });
+});
+</script>
+{% endblock %}

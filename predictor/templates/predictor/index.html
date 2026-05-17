@@ -1,0 +1,351 @@
+{% extends "predictor/base.html" %}
+{% block title %}Disease Predictor — MedPredict AI{% endblock %}
+
+{% block extra_styles %}
+<style>
+.hero{margin-bottom:2rem}
+.hero h1{
+  font-family:'Space Mono',monospace;font-size:clamp(1.5rem,4vw,2.2rem);
+  font-weight:700;letter-spacing:-1px;line-height:1.2;
+  margin-bottom:.5rem;
+}
+.hero h1 .hl{color:var(--accent)}
+.hero p{color:var(--muted);font-size:.975rem;max-width:520px}
+
+/* ── Layout ── */
+.predictor-grid{display:grid;grid-template-columns:1fr 380px;gap:1.5rem;align-items:start}
+@media(max-width:900px){.predictor-grid{grid-template-columns:1fr}}
+
+/* ── Symptom panel ── */
+.symptom-panel{position:relative}
+
+.search-bar{
+  display:flex;align-items:center;gap:.75rem;
+  background:var(--surface);border:1.5px solid var(--border);
+  border-radius:8px;padding:.75rem 1rem;margin-bottom:1rem;
+  transition:border-color .2s;
+}
+.search-bar:focus-within{border-color:var(--accent)}
+.search-bar input{
+  background:none;border:none;outline:none;
+  color:var(--text);font-family:var(--sans);font-size:.9rem;width:100%;
+}
+.search-bar input::placeholder{color:var(--muted)}
+
+.selected-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:.75rem;padding:.5rem .75rem;
+  background:rgba(6,182,212,.07);border:1px solid rgba(6,182,212,.2);border-radius:8px;
+}
+.selected-count{font-size:.85rem;color:var(--accent);font-family:var(--mono)}
+.clear-btn{font-size:.8rem;color:var(--muted);cursor:pointer;background:none;border:none;transition:color .2s}
+.clear-btn:hover{color:var(--danger)}
+
+/* Symptom grid */
+.symptom-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:.5rem;max-height:480px;overflow-y:auto;padding-right:.25rem;
+}
+
+.symptom-chip{
+  display:flex;align-items:center;gap:.5rem;
+  padding:.5rem .75rem;border-radius:6px;
+  border:1.5px solid var(--border);background:var(--surface);
+  cursor:pointer;font-size:.825rem;color:var(--muted);
+  transition:all .15s;user-select:none;
+}
+.symptom-chip:hover{border-color:var(--border2);color:var(--text);background:var(--card)}
+.symptom-chip.selected{
+  border-color:var(--accent);background:rgba(6,182,212,.12);color:var(--accent);
+}
+.symptom-chip .dot{
+  width:7px;height:7px;border-radius:50%;
+  border:1.5px solid currentColor;flex-shrink:0;transition:background .15s;
+}
+.symptom-chip.selected .dot{background:var(--accent)}
+.symptom-chip.hidden{display:none}
+
+/* ── Right panel ── */
+.right-panel{display:flex;flex-direction:column;gap:1rem;position:sticky;top:72px}
+
+/* Model selector */
+.model-selector{display:flex;flex-direction:column;gap:.5rem}
+.model-btn{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.625rem 1rem;border-radius:8px;
+  border:1.5px solid var(--border);background:var(--surface);
+  cursor:pointer;transition:all .2s;
+}
+.model-btn:hover{border-color:var(--border2)}
+.model-btn.active{border-color:var(--accent);background:rgba(6,182,212,.08)}
+.model-name{font-size:.875rem;font-weight:600;color:var(--text)}
+.model-acc{font-size:.75rem;font-family:var(--mono);color:var(--accent2)}
+
+/* Predict button */
+.predict-btn{
+  width:100%;padding:1rem;border-radius:10px;
+  border:none;background:var(--accent);color:#000;
+  font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;
+  cursor:pointer;transition:all .2s;letter-spacing:-.5px;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.predict-btn:hover:not(:disabled){background:#22d3ee;transform:translateY(-2px);box-shadow:0 8px 24px rgba(6,182,212,.3)}
+.predict-btn:disabled{background:var(--border2);color:var(--muted);cursor:not-allowed;transform:none}
+.predict-btn.loading{position:relative;overflow:hidden}
+.predict-btn.loading::after{
+  content:'';position:absolute;left:-100%;width:100%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);
+  animation:shimmer 1.2s infinite;
+}
+@keyframes shimmer{to{left:100%}}
+
+/* ── Results card ── */
+.results-card{animation:slideUp .3s ease}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.result-item{
+  padding:1rem;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface);margin-bottom:.75rem;
+  transition:border-color .2s;
+}
+.result-item:first-child{border-color:var(--accent)}
+.result-item:hover{border-color:var(--border2)}
+
+.result-top-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
+.disease-name{font-weight:700;font-size:.95rem;color:var(--text)}
+.confidence-val{font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--accent)}
+.result-item:nth-child(2) .confidence-val{color:var(--accent2)}
+.result-item:nth-child(3) .confidence-val{color:var(--warn)}
+
+.confidence-bar{height:5px;border-radius:3px;background:var(--border);margin:.4rem 0;overflow:hidden}
+.confidence-fill{height:100%;border-radius:3px;background:var(--accent);transition:width .5s ease}
+.result-item:nth-child(2) .confidence-fill{background:var(--accent2)}
+.result-item:nth-child(3) .confidence-fill{background:var(--warn)}
+
+.doctor-tag{font-size:.78rem;color:var(--muted);display:flex;align-items:center;gap:.35rem}
+
+.symptoms-used{
+  padding:.75rem;border-radius:6px;background:rgba(16,185,129,.05);
+  border:1px solid rgba(16,185,129,.15);font-size:.78rem;color:var(--muted);
+  margin-top:.75rem;
+}
+
+.rank-badge{
+  width:22px;height:22px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:.7rem;font-weight:700;font-family:var(--mono);margin-right:.4rem;
+}
+.rank-1{background:var(--accent);color:#000}
+.rank-2{background:var(--accent2);color:#000}
+.rank-3{background:var(--warn);color:#000}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Hero ─────────────────────────────────────────────────────────────── -->
+<div class="hero">
+  <h1>Healthcare <span class="hl">Disease Predictor</span></h1>
+  <p>Select your symptoms below. Our trained ML models will predict the most probable diseases with confidence scores.</p>
+</div>
+
+<div class="disclaimer" style="margin-bottom:1.5rem">
+  <span>⚠️</span>
+  <span><strong>Disclaimer:</strong> This tool is for educational/awareness purposes only. It is NOT a substitute for professional medical diagnosis. Always consult a qualified healthcare provider.</span>
+</div>
+
+<!-- ── Main Grid ─────────────────────────────────────────────────────────── -->
+<div class="predictor-grid">
+
+  <!-- LEFT: Symptom selector -->
+  <div class="symptom-panel card card-glow">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <h2 style="font-family:var(--mono);font-size:1rem;color:var(--accent)">Select Symptoms</h2>
+      <span class="badge badge-cyan" id="total-badge">{{ symptoms|length }} available</span>
+    </div>
+
+    <!-- Search -->
+    <div class="search-bar">
+      <span style="color:var(--muted)">🔍</span>
+      <input type="text" id="symptom-search" placeholder="Search symptoms...">
+    </div>
+
+    <!-- Selected count bar -->
+    <div class="selected-bar">
+      <span class="selected-count" id="selected-count">0 symptoms selected</span>
+      <button class="clear-btn" onclick="clearAll()">Clear all ✕</button>
+    </div>
+
+    <!-- Symptom chips -->
+    <div class="symptom-grid" id="symptom-grid">
+      {% for sym in symptoms %}
+      <div class="symptom-chip" data-key="{{ sym.key }}" data-label="{{ sym.label }}" onclick="toggleSymptom(this)">
+        <span class="dot"></span>
+        <span>{{ sym.label }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- RIGHT: Controls + Results -->
+  <div class="right-panel">
+
+    <!-- Model selector -->
+    <div class="card">
+      <div style="font-family:var(--mono);font-size:.85rem;color:var(--muted);margin-bottom:.75rem">SELECT MODEL</div>
+      <div class="model-selector" id="model-selector">
+        {% for name, stats in accuracy.items %}
+        <div class="model-btn {% if forloop.first %}active{% endif %}" data-model="{{ name }}" onclick="selectModel(this)">
+          <span class="model-name">{{ name }}</span>
+          <span class="model-acc">{{ stats.accuracy|floatformat:1 }}%</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Predict button -->
+    <button class="predict-btn" id="predict-btn" onclick="runPrediction()" disabled>
+      <span id="btn-text">⚕ Predict Disease</span>
+    </button>
+
+    <!-- Results -->
+    <div id="results-container"></div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const CSRF = '{{ csrf_token }}';
+let selectedSymptoms = new Set();
+let selectedModel = '{{ model_choices.0 }}';
+
+// ── Toggle symptom chip ──────────────────────────────────────────────────────
+function toggleSymptom(el) {
+  const key = el.dataset.key;
+  if (selectedSymptoms.has(key)) {
+    selectedSymptoms.delete(key);
+    el.classList.remove('selected');
+  } else {
+    selectedSymptoms.add(key);
+    el.classList.add('selected');
+  }
+  updateCount();
+}
+
+function updateCount() {
+  const n = selectedSymptoms.size;
+  document.getElementById('selected-count').textContent = `${n} symptom${n !== 1 ? 's' : ''} selected`;
+  document.getElementById('predict-btn').disabled = n === 0;
+}
+
+function clearAll() {
+  selectedSymptoms.clear();
+  document.querySelectorAll('.symptom-chip').forEach(c => c.classList.remove('selected'));
+  updateCount();
+  document.getElementById('results-container').innerHTML = '';
+}
+
+// ── Search filter ────────────────────────────────────────────────────────────
+document.getElementById('symptom-search').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  document.querySelectorAll('.symptom-chip').forEach(chip => {
+    const match = chip.dataset.label.toLowerCase().includes(q);
+    chip.classList.toggle('hidden', !match);
+  });
+});
+
+// ── Model selector ───────────────────────────────────────────────────────────
+function selectModel(el) {
+  document.querySelectorAll('.model-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  selectedModel = el.dataset.model;
+}
+
+// ── Prediction ───────────────────────────────────────────────────────────────
+async function runPrediction() {
+  if (selectedSymptoms.size === 0) return;
+
+  const btn = document.getElementById('predict-btn');
+  btn.classList.add('loading');
+  document.getElementById('btn-text').textContent = 'Analyzing...';
+  btn.disabled = true;
+
+  try {
+    const resp = await fetch("{% url 'predict' %}", {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+      body: JSON.stringify({
+        symptoms: [...selectedSymptoms],
+        model: selectedModel,
+      }),
+    });
+
+    const data = await resp.json();
+
+    if (data.error) {
+      showError(data.error);
+    } else {
+      showResults(data);
+    }
+  } catch (e) {
+    showError('Network error. Please try again.');
+  } finally {
+    btn.classList.remove('loading');
+    document.getElementById('btn-text').textContent = '⚕ Predict Disease';
+    btn.disabled = false;
+  }
+}
+
+// ── Render results ───────────────────────────────────────────────────────────
+function showResults(data) {
+  const container = document.getElementById('results-container');
+  const rankColors = ['rank-1', 'rank-2', 'rank-3'];
+
+  let html = `
+    <div class="card results-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+        <h3 style="font-family:var(--mono);font-size:.9rem;color:var(--accent2)">PREDICTION RESULTS</h3>
+        <span class="badge badge-green">${data.model_used}</span>
+      </div>
+  `;
+
+  data.predictions.forEach((p, i) => {
+    const conf = p.confidence;
+    html += `
+      <div class="result-item">
+        <div class="result-top-row">
+          <div class="disease-name">
+            <span class="rank-badge ${rankColors[i]}">${i+1}</span>${p.disease}
+          </div>
+          <div class="confidence-val">${conf}%</div>
+        </div>
+        <div class="confidence-bar">
+          <div class="confidence-fill" style="width:${Math.min(conf,100)}%"></div>
+        </div>
+        <div class="doctor-tag">🩺 See: <strong style="color:var(--text)">${p.doctor}</strong></div>
+      </div>
+    `;
+  });
+
+  // Symptoms used
+  const symsUsed = data.symptoms_used.map(s => s.replace(/_/g,' ')).join(', ');
+  html += `
+    <div class="symptoms-used">
+      <strong style="color:var(--accent2)">Symptoms analyzed:</strong> ${symsUsed}
+    </div>
+  </div>`;
+
+  container.innerHTML = html;
+}
+
+function showError(msg) {
+  document.getElementById('results-container').innerHTML = `
+    <div class="card" style="border-color:var(--danger)">
+      <p style="color:var(--danger);font-size:.875rem">⚠️ ${msg}</p>
+    </div>`;
+}
+</script>
+{% endblock %}
