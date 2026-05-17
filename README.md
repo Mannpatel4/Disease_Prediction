@@ -120,3 +120,8 @@ python predictor/ml/train_models.py
 This system is for **educational and awareness purposes only**.
 It is **not a medical diagnostic tool** and should not replace professional medical advice.
 Always consult a qualified healthcare provider for diagnosis and treatment.
+
+---
+
+## Author
+Mann
