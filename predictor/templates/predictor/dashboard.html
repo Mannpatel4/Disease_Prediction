@@ -152,7 +152,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     </div>
     <div class="chart-body">
       {% if charts_exist.model_comparison %}
-      <img src="{{ MEDIA_URL }}{{ chart_files.model_comparison }}" alt="Model Comparison">
+      <img src="/media/{{ chart_files.model_comparison }}" alt="Model Comparison">
       {% else %}
       <div class="chart-placeholder">
         <span style="font-size:2rem">📊</span>
@@ -171,6 +171,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <div class="chart-body">
       {% if charts_exist.performance_metrics %}
       <img src="{{ MEDIA_URL }}{{ chart_files.performance_metrics }}" alt="Performance Metrics">
+      <img src="/media/{{ chart_files.performance_metrics }}" alt="Performance Metrics">
       {% else %}
       <div class="chart-placeholder"><span>📈</span><p>Run train_models to generate</p></div>
       {% endif %}
@@ -186,6 +187,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <div class="chart-body">
       {% if charts_exist.disease_distribution %}
       <img src="{{ MEDIA_URL }}{{ chart_files.disease_distribution }}" alt="Disease Distribution">
+      <img src="/media/{{ chart_files.disease_distribution }}" alt="Disease Distribution">
       {% else %}
       <div class="chart-placeholder"><span>🦠</span><p>Run train_models to generate</p></div>
       {% endif %}
@@ -229,6 +231,7 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <div class="chart-body">
       {% if charts_exist.confusion_matrix %}
       <img src="{{ MEDIA_URL }}{{ chart_files.confusion_matrix }}" alt="Confusion Matrix">
+      <img src="/media/{{ chart_files.confusion_matrix }}" alt="Confusion Matrix">
       {% else %}
       <div class="chart-placeholder"><span>🔲</span><p>Run train_models to generate</p></div>
       {% endif %}
