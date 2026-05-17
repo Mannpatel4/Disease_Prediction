@@ -1,6 +1,4 @@
 # 🏥 Healthcare Disease Prediction System
-### Minor Project — Silver Oak University (1010103494)
-**Group:** Patel Mann · Panchal Deep · Tiwari Mayur | **Guide:** Dr. A. R. Kazi
 
 ---
 
