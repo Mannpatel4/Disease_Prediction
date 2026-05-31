@@ -34,37 +34,37 @@ Open → **http://127.0.0.1:8000**
 healthcare/
 ├── manage.py
 ├── requirements.txt
-├── db.sqlite3                        ← auto-created
-├── media/charts/                     ← generated charts (PNG)
+├── db.sqlite3              
+├── media/charts/                     
 │
-├── healthcare_project/               ← Django project settings
+├── healthcare_project/               
 │   ├── settings.py
 │   └── urls.py
 │
-└── predictor/                        ← Main Django app
-    ├── views.py                      ← index, predict, dashboard, history, auth
-    ├── models.py                     ← PredictionHistory model
+└── predictor/                 
+    ├── views.py                      
+    ├── models.py                     
     ├── urls.py
     ├── admin.py
     │
     ├── ml/
-    │   ├── Training.csv              ← 4920 training samples
-    │   ├── Testing.csv               ← 41 test samples
-    │   ├── train_models.py           ← standalone training script
-    │   ├── ml_engine.py              ← prediction API used by views
-    │   ├── naive_bayes.pkl           ← trained model
-    │   ├── decision_tree.pkl         ← trained model
-    │   ├── random_forest.pkl         ← trained model
-    │   ├── symptoms.pkl              ← 132 symptom column names
-    │   ├── label_encoder.pkl         ← disease label encoder
-    │   └── accuracy_summary.pkl      ← model performance summary
+    │   ├── Training.csv             
+    │   ├── Testing.csv        
+    │   ├── train_models.py          
+    │   ├── ml_engine.py              
+    │   ├── naive_bayes.pkl  
+    │   ├── decision_tree.pkl
+    │   ├── random_forest.pkl
+    │   ├── symptoms.pkl               
+    │   ├── label_encoder.pkl        
+    │   └── accuracy_summary.pkl       
     │
     └── templates/predictor/
-        ├── base.html                 ← dark medical theme
-        ├── index.html                ← symptom selector + prediction
-        ├── dashboard.html            ← charts + analytics
-        ├── history.html              ← user prediction history
-        └── auth.html                 ← login / register
+        ├── base.html             
+        ├── index.html                
+        ├── dashboard.html        
+        ├── history.html              
+        └── auth.html           
 ```
 
 ---
@@ -73,8 +73,8 @@ healthcare/
 
 | Model | Test Accuracy | CV Accuracy |
 |---|---|---|
-| **Naive Bayes** | 100.00% | 100.00% |
-| **Random Forest** | 100.00% | 100.00% |
+| **Naive Bayes** | 100.00% | 100.00% |      *When get 100% Accuracy means model is overfit but when just test it ok
+| **Random Forest** | 100.00% | 100.00% |    *When get 100% Accuracy means model is overfit but when just test it ok
 | Decision Tree | 58.54% | 58.01% |
 
 **Dataset:** 4920 training samples · 41 test samples · 132 symptoms · 41 disease classes
