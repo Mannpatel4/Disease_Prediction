@@ -73,12 +73,12 @@ healthcare/
 
 | Model | Test Accuracy | CV Accuracy |
 |---|---|---|
-| **Naive Bayes** | 100.00% | 100.00% |      *When get 100% Accuracy means model is overfit but when just test it ok
-| **Random Forest** | 100.00% | 100.00% |    *When get 100% Accuracy means model is overfit but when just test it ok
+| **Naive Bayes** | 100.00% | 100.00% |      
+| **Random Forest** | 100.00% | 100.00% |    
 | Decision Tree | 58.54% | 58.01% |
 
 **Dataset:** 4920 training samples · 41 test samples · 132 symptoms · 41 disease classes
-
+**Notis:** When get 100% Accuracy means model is overfit but when just test it ok
 **To retrain models** (if you modify the CSV):
 ```bash
 python manage.py train_models
