@@ -1,8 +1,8 @@
-# 🏥 Healthcare Disease Prediction System
+# Healthcare Disease Prediction System
 
 ---
 
-## 🚀 Quick Start (5 Steps)
+## Quick Start (5 Steps)
 
 ```bash
 # 1. Enter project folder
@@ -28,7 +28,7 @@ Open → **http://127.0.0.1:8000**
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 healthcare/
@@ -69,7 +69,7 @@ healthcare/
 
 ---
 
-## 🤖 ML Models & Performance
+## ML Models & Performance
 
 | Model | Test Accuracy | CV Accuracy |
 |---|---|---|
@@ -88,7 +88,7 @@ python predictor/ml/train_models.py
 
 ---
 
-## 🌐 Pages
+## Pages
 
 | URL | Page |
 |---|---|
@@ -101,7 +101,7 @@ python predictor/ml/train_models.py
 
 ---
 
-## ⚙️ Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -115,7 +115,7 @@ python predictor/ml/train_models.py
 
 ---
 
-## ⚠️ Disclaimer
+## Disclaimer
 
 This system is for **educational and awareness purposes only**.
 It is **not a medical diagnostic tool** and should not replace professional medical advice.
